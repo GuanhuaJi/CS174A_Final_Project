@@ -1,5 +1,7 @@
 # Mischievous Kitten Match-Up
 
+![Game Cover](https://github.com/GuanhuaJi/CS174A_FInal_Project/blob/main/41e9514640af6bec704c8a4a92d41601585f9e0f5e0ab44a8edffbc9d7d34613.png)
+
 ### Game Objective
 Players must eliminate all cards by matching pairs while dealing with interference from an AI kitten to successfully complete the game.
 
