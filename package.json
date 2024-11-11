@@ -1,0 +1,18 @@
+{
+  "name": "cs174a_final_project",
+  "version": "1.0.0",
+  "description": "![Game Cover](https://github.com/GuanhuaJi/CS174A_FInal_Project/blob/main/41e9514640af6bec704c8a4a92d41601585f9e0f5e0ab44a8edffbc9d7d34613.png)",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}
