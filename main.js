@@ -34,17 +34,23 @@ const cardHeight = 5;
 const cardDepth = 1;
 const gap = 0.5;
 
-// Generate card numbers (1-18, each number appears twice)
-const numbers = [];
-for (let i = 1; i <= 18; i++) {
-    numbers.push(i, i);
+//Card colors
+const colors = [0xFF0000, 0x0000FF, 0xFFFF00, 0x008000, 0xFFC0CB, 0x800080];
+
+
+// Generate combinations of color and number
+const colorNumberPairs = [];
+for (let color of colors) {
+    for (let number = 1; number <= 3; number++) {
+        colorNumberPairs.push({ color,number }, { color,number }); // Each combination appears twice
+} 
 }
 
-// Shuffle the numbers array
-for (let i = numbers.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-}
+// Shuffle the color-number pairs array
+for (let i = colorNumberPairs.length - 1; i > 0; i--) {
+     const j = Math.floor(Math.random() * (i + 1));
+    [colorNumberPairs[i], colorNumberPairs[j]] = [colorNumberPairs[j], colorNumberPairs[i]];
+ }
 
 let numberIndex = 0;
 const cards = [];
@@ -54,8 +60,9 @@ let timerStarted = false;
 
 // Card class definition
 class Card {
-    constructor(number, positionX, positionY) {
+    constructor(color, number, positionX, positionY) {
         this.number = number;
+        this.color = color;
         this.positionX = positionX;
         this.positionY = positionY;
         this.isFaceUp = true;
@@ -82,7 +89,7 @@ class Card {
         context.fillText(this.number, canvas.width / 2, canvas.height / 2);
 
         const frontTexture = new THREE.CanvasTexture(canvas);
-        const frontMaterial = new THREE.MeshBasicMaterial({ map: frontTexture });
+        const frontMaterial = new THREE.MeshBasicMaterial({color: this.color, map: frontTexture });
         const backMaterial = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
         const sideMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
@@ -181,14 +188,15 @@ class Card {
 for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
         // Get the number for each card
-        const cardNumber = numbers[numberIndex++];
+        //const cardNumber = numbers[numberIndex++];
+        const { color, number } = colorNumberPairs[numberIndex++];
 
         // Calculate position for each card
         const positionX = j * (cardWidth + gap) - (cols * (cardWidth + gap)) / 2 + cardWidth / 2;
         const positionY = i * (cardHeight + gap) - (rows * (cardHeight + gap)) / 2 + cardHeight / 2;
 
         // Create and add the card to the scene
-        new Card(cardNumber, positionX, positionY);
+        new Card(color,number, positionX, positionY);
     }
 }
 
@@ -231,7 +239,7 @@ window.addEventListener('click', (event) => {
         }
 
         if (selectedCards.length === 2) {
-            if (selectedCards[0].number === selectedCards[1].number) {
+            if (selectedCards[0].number === selectedCards[1].number && selectedCards[0].color === selectedCards[1].color)  {
                 setTimeout(() => {
                     selectedCards[0].removeCard();
                     selectedCards[1].removeCard();
