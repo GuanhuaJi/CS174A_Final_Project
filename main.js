@@ -29,9 +29,9 @@ let timerStart = null;
 // Adjust the camera position
 camera.position.z = 50;
 
-// Create a board of cards (4x4 grid)
-const rows = 4;
-const cols = 4;
+// Create a board of cards (5x5 grid)
+const rows = 5;
+const cols = 5;
 const cardWidth = 5;
 const cardHeight = 5;
 const cardDepth = 1;
@@ -44,7 +44,7 @@ const colors = [0xFF0000, 0x0000FF, 0xFFFF00, 0x008000];
 // Generate combinations of color and number
 const colorNumberPairs = [];
 for (let color of colors) {
-    for (let number = 1; number <= 2; number++) {
+    for (let number = 1; number <= 3; number++) {
         colorNumberPairs.push({ color,number }, { color,number }); // Each combination appears twice
 } 
 }
@@ -191,8 +191,8 @@ class Card {
     }
 
     static initiateShuffle() {
-        const outerRingIndices = [4, 8, 12, 13, 14, 15, 11, 7, 3, 2, 1, 0];
-        const innerRingIndices = [9, 10, 6, 5];
+        const outerRingIndices = [5, 10, 14, 19, 20, 21, 22, 23, 18, 13, 9, 4, 3, 2, 1, 0];
+        const innerRingIndices = [11, 15, 16, 17, 12, 8, 7, 6];
 
         const positions = cards.map(card => ({
             x: card.cardMesh.position.x,
@@ -231,11 +231,13 @@ class Card {
     }
 }
 
-// Create the grid of cards
+/// Create the grid of cards and skip the center position
 for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
-        // Get the number for each card
-        //const cardNumber = numbers[numberIndex++];
+        // Skip the center position at (2, 2)
+        if (i === 2 && j === 2) continue;
+
+        // Get color and number for each card
         const { color, number } = colorNumberPairs[numberIndex++];
 
         // Calculate position for each card
@@ -243,7 +245,7 @@ for (let i = 0; i < rows; i++) {
         const positionY = i * (cardHeight + gap) - (rows * (cardHeight + gap)) / 2 + cardHeight / 2;
 
         // Create and add the card to the scene
-        new Card(color,number, positionX, positionY);
+        new Card(color, number, positionX, positionY);
     }
 }
 
@@ -308,7 +310,7 @@ function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
 
-    // Countdown logic
+    // Countdown
     if (!countdownStarted) {
         countdownStarted = true;
 
