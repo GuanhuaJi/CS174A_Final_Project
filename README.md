@@ -31,14 +31,14 @@ Players must eliminate all cards by matching pairs while dealing with interferen
 ### 1. Game Initialization
 
 - **Card Layout:**  
-  The game board has a 6x6 layout with 36 cards in total.  
-  Each card has a color (red, blue, yellow, green, pink, purple) and a number (1-3), with each combination appearing on two cards.
+  The game board has a 4x4 layout with 16 cards in total.  
+  Each card has a color (red, blue, yellow, green) and a number (1 or 2), with each combination appearing on two cards.
 
 - **Preview Phase:**  
   At the start of the game, all cards are face-up for 10 seconds, allowing players to memorize their positions and details.
 
 - **Initial Shuffle:**  
-  After 10 seconds, all cards flip face-down, and a simple shuffle occurs, such as moving each card one position clockwise.
+  After 10 seconds, all cards flip face-down, and a simple shuffle occurs, i.e. moving each card one position clockwise.
 
 ### 2. Game Turn Flow
 
