@@ -9,7 +9,7 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Timer element
+// Initialize Timer element
 const timerElement = document.createElement('div');
 timerElement.style.position = 'absolute';
 timerElement.style.top = '20px';
@@ -21,27 +21,30 @@ timerElement.style.backgroundColor = '#fff';
 timerElement.style.padding = '10px';
 timerElement.style.borderRadius = '5px';
 document.body.appendChild(timerElement);
+
+let initialCountdown = 10;
+let countdownStarted = false;
 let timerStart = null;
 
 // Adjust the camera position
 camera.position.z = 50;
 
-// Create a board of cards (6x6 grid)
-const rows = 6;
-const cols = 6;
+// Create a board of cards (4x4 grid)
+const rows = 4;
+const cols = 4;
 const cardWidth = 5;
 const cardHeight = 5;
 const cardDepth = 1;
 const gap = 0.5;
 
 //Card colors
-const colors = [0xFF0000, 0x0000FF, 0xFFFF00, 0x008000, 0xFFC0CB, 0x800080];
+const colors = [0xFF0000, 0x0000FF, 0xFFFF00, 0x008000];
 
 
 // Generate combinations of color and number
 const colorNumberPairs = [];
 for (let color of colors) {
-    for (let number = 1; number <= 3; number++) {
+    for (let number = 1; number <= 2; number++) {
         colorNumberPairs.push({ color,number }, { color,number }); // Each combination appears twice
 } 
 }
@@ -167,6 +170,50 @@ class Card {
         }, 16); // Approximately 60 frames per second
     }
 
+    setTargetPosition(x, y) {
+        this.targetPosition = new THREE.Vector3(x, y, 0);
+    }
+
+    moveTowardsTarget() {
+        if (this.targetPosition) {
+            const direction = new THREE.Vector3().subVectors(this.targetPosition, this.cardMesh.position);
+            const distance = direction.length();
+            direction.normalize();
+            const speed = 0.05;
+
+            if (distance > speed) {
+                this.cardMesh.position.add(direction.multiplyScalar(speed));
+            } else {
+                this.cardMesh.position.copy(this.targetPosition);
+                this.targetPosition = null;
+            }
+        }
+    }
+
+    static initiateShuffle() {
+        const outerRingIndices = [4, 8, 12, 13, 14, 15, 11, 7, 3, 2, 1, 0];
+        const innerRingIndices = [9, 10, 6, 5];
+
+        const positions = cards.map(card => ({
+            x: card.cardMesh.position.x,
+            y: card.cardMesh.position.y
+        }));
+
+        // Set target positions for outer ring cards
+        for (let i = 0; i < outerRingIndices.length; i++) {
+            const currentIndex = outerRingIndices[i];
+            const nextIndex = outerRingIndices[(i + 1) % outerRingIndices.length];
+            cards[currentIndex].setTargetPosition(positions[nextIndex].x, positions[nextIndex].y);
+        }
+
+        // Set target positions for inner ring cards
+        for (let i = 0; i < innerRingIndices.length; i++) {
+            const currentIndex = innerRingIndices[i];
+            const nextIndex = innerRingIndices[(i + 1) % innerRingIndices.length];
+            cards[currentIndex].setTargetPosition(positions[nextIndex].x, positions[nextIndex].y);
+        }
+    }
+
     onMouseOver() {
         if (!this.isFaceUp) {
             this.cardMesh.scale.set(1.1, 1.1, 1.1); // Slightly enlarge the card
@@ -261,16 +308,47 @@ function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
 
-    // Update timer display
+    // Countdown logic
+    if (!countdownStarted) {
+        countdownStarted = true;
+
+        const formattedMinutes = String(Math.floor(initialCountdown / 60)).padStart(2, '0');
+        const formattedSeconds = String(initialCountdown % 60).padStart(2, '0');
+        timerElement.textContent = `Timer: ${formattedMinutes}:${formattedSeconds}`;
+
+        const countdownInterval = setInterval(() => {
+            initialCountdown--;
+
+            const minutes = Math.floor(initialCountdown / 60);
+            const seconds = initialCountdown % 60;
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(seconds).padStart(2, '0');
+            timerElement.textContent = `Timer: ${formattedMinutes}:${formattedSeconds}`;
+
+            if (initialCountdown <= 0) {
+                clearInterval(countdownInterval);
+
+                // Flip all cards face down after countdown ends
+                cards.forEach(card => card.startRotation());
+
+                // After flipping, initiate the shuffle animation
+                setTimeout(() => {
+                    Card.initiateShuffle();
+                }, 1000); // Wait for 1 second after flipping down before shuffling
+            }
+        }, 1000);
+    }
+
+    // Move each card towards its target position during shuffle animation
+    cards.forEach(card => card.moveTowardsTarget());
+
+    // Update game timer display once all cards have faced down and are shuffled
     if (allCardsFacedDown && timerStart) {
         const elapsedTime = Math.floor((Date.now() - timerStart) / 1000);
         const minutes = Math.floor(elapsedTime / 60);
         const seconds = elapsedTime % 60;
-
-        // Format minutes and seconds to always be two digits
         const formattedMinutes = String(minutes).padStart(2, '0');
         const formattedSeconds = String(seconds).padStart(2, '0');
-
         timerElement.textContent = `Timer: ${formattedMinutes}:${formattedSeconds}`;
     }
 }
