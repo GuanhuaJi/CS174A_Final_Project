@@ -305,6 +305,129 @@ window.addEventListener('click', (event) => {
     }
 });
 
+// Create a kitten using Three.js basic geometry shapes
+function createKitten() {
+    const kittenGroup = new THREE.Group();
+
+    // Body - Cylinder to represent the torso
+    const bodyGeometry = new THREE.CylinderGeometry(2, 2.5, 6, 32);
+    const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.position.set(0, 0, 0);
+    body.rotation.z = Math.PI / 2;
+    kittenGroup.add(body);
+
+    // Head - Sphere to represent the head
+    const headGeometry = new THREE.SphereGeometry(2, 32, 32);
+    const headMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
+    const head = new THREE.Mesh(headGeometry, headMaterial);
+    head.position.set(4, 0, 0);
+    kittenGroup.add(head);
+
+    // Ears - Cones to represent ears
+    const earGeometry = new THREE.ConeGeometry(1, 2, 32);
+    const earMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
+    const leftEar = new THREE.Mesh(earGeometry, earMaterial);
+    const rightEar = new THREE.Mesh(earGeometry, earMaterial);
+    
+    leftEar.position.set(5.5, 1.5, 1);
+    leftEar.rotation.z = Math.PI / 8;
+    rightEar.position.set(5.5, 1.5, -1);
+    rightEar.rotation.z = -Math.PI / 8;
+    
+    kittenGroup.add(leftEar);
+    kittenGroup.add(rightEar);
+
+    // Legs - Cylinders to represent the legs
+    const legGeometry = new THREE.CylinderGeometry(0.5, 0.5, 3, 32);
+    const legMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+    const frontLeftLeg = new THREE.Mesh(legGeometry, legMaterial);
+    const frontRightLeg = new THREE.Mesh(legGeometry, legMaterial);
+    const backLeftLeg = new THREE.Mesh(legGeometry, legMaterial);
+    const backRightLeg = new THREE.Mesh(legGeometry, legMaterial);
+
+    frontLeftLeg.position.set(1, -2, 1.5);
+    frontRightLeg.position.set(1, -2, -1.5);
+    backLeftLeg.position.set(-1, -2, 1.5);
+    backRightLeg.position.set(-1, -2, -1.5);
+
+    kittenGroup.add(frontLeftLeg);
+    kittenGroup.add(frontRightLeg);
+    kittenGroup.add(backLeftLeg);
+    kittenGroup.add(backRightLeg);
+
+    // Tail - Cylinder to represent the tail
+    const tailGeometry = new THREE.CylinderGeometry(0.3, 0.3, 4, 32);
+    const tailMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
+    const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+    tail.position.set(-3.5, 0, 0);
+    tail.rotation.z = Math.PI / 4;
+    kittenGroup.add(tail);
+
+    // Eyes - Small spheres for the eyes
+    const eyeGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+    const eyeMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+
+    leftEye.position.set(5, 0.8, 0.8);
+    rightEye.position.set(5, 0.8, -0.8);
+
+    kittenGroup.add(leftEye);
+    kittenGroup.add(rightEye);
+
+    // Nose - Small cone for the nose
+    const noseGeometry = new THREE.ConeGeometry(0.2, 0.5, 16);
+    const noseMaterial = new THREE.MeshPhongMaterial({ color: 0xff6347 });
+    const nose = new THREE.Mesh(noseGeometry, noseMaterial);
+    nose.position.set(5.9, 0.3, 0);
+    nose.rotation.x = Math.PI / 2;
+    kittenGroup.add(nose);
+
+    // Whiskers - Use thin cylinders to represent whiskers
+    const whiskerGeometry = new THREE.CylinderGeometry(0.02, 0.02, 3, 8);
+    const whiskerMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+
+    for (let i = 0; i < 3; i++) {
+        const leftWhisker = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
+        leftWhisker.position.set(6, 0.1 * (i - 1), 1.2);
+        leftWhisker.rotation.z = Math.PI / 6;
+        kittenGroup.add(leftWhisker);
+
+        const rightWhisker = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
+        rightWhisker.position.set(6, 0.1 * (i - 1), -1.2);
+        rightWhisker.rotation.z = -Math.PI / 6;
+        kittenGroup.add(rightWhisker);
+    }
+
+    // Add some simple texture using bump mapping (for more realistic fur effect)
+    const bumpTexture = new THREE.TextureLoader().load('textures/fur_bump_map.jpg', function() { console.log('Bump map loaded successfully'); }, undefined, function() { console.error('Error loading bump map'); });
+    bodyMaterial.bumpMap = bumpTexture;
+    bodyMaterial.bumpScale = 0.5;
+    headMaterial.bumpMap = bumpTexture;
+    headMaterial.bumpScale = 0.5;
+
+    return kittenGroup;
+}
+
+// Add the kitten to the scene
+const kitten = createKitten();
+kitten.position.set(0, -20, 0);
+scene.add(kitten);
+
+// Add ambient light
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light with intensity 0.5
+scene.add(ambientLight);
+
+// Add directional light
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // White light with intensity 1
+directionalLight.position.set(10, 10, 10); // Position it at an angle to create depth
+scene.add(directionalLight);
+
+// Optionally add a helper to visualize the light
+const lightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
+// scene.add(lightHelper); // Removed the light helper to clean up the visual appearance
+
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
