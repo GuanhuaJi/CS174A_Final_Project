@@ -7,24 +7,72 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
 
 // Initialize Timer element
 const timerElement = document.createElement('div');
 timerElement.style.position = 'absolute';
 timerElement.style.top = '20px';
-timerElement.style.left = '50%';
-timerElement.style.transform = 'translateX(-50%)';
+timerElement.style.left = '20px';
 timerElement.style.fontSize = '24px';
 timerElement.style.color = '#000';
 timerElement.style.backgroundColor = '#fff';
 timerElement.style.padding = '10px';
 timerElement.style.borderRadius = '5px';
+
 document.body.appendChild(timerElement);
 
+// Initialize Points element
+const pointsElement = document.createElement('div');
+pointsElement.style.position = 'absolute';
+pointsElement.style.top = '20px';
+pointsElement.style.right = '20px';
+pointsElement.style.fontSize = '24px';
+pointsElement.style.color = '#000';
+pointsElement.style.backgroundColor = '#fff';
+pointsElement.style.padding = '10px';
+pointsElement.style.borderRadius = '5px';
+
+document.body.appendChild(pointsElement);
+
+// Add an image on top of the board
+const imageElement = document.createElement('img');
+imageElement.src = 'kawaii_cute_kitten_drawing_anime_by_jaidenanimat_d_by_itsamechristian_dg97pj6-fullview.jpg';
+imageElement.style.position = 'absolute';
+imageElement.style.top = '80px';
+imageElement.style.left = '50%';
+imageElement.style.transform = 'translateX(-50%)';
+imageElement.style.width = '200px';
+imageElement.style.height = 'auto';
+
+
+let points = 0;
 let initialCountdown = 10;
 let countdownStarted = false;
 let timerStart = null;
+let consecutiveMatches = 0;
+
+// Create Start Game button
+const startButton = document.createElement('button');
+startButton.innerText = 'Start Game';
+startButton.style.position = 'absolute';
+startButton.style.top = '50%';
+startButton.style.left = '50%';
+startButton.style.transform = 'translate(-50%, -50%)';
+startButton.style.padding = '20px';
+startButton.style.fontSize = '24px';
+startButton.style.cursor = 'pointer';
+document.body.appendChild(startButton);
+
+// Set random seed
+function setRandomSeed(seed) {
+    let x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+}
+let seed = 12345;
+function random() {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+}
 
 // Adjust the camera position
 camera.position.z = 50;
@@ -32,14 +80,13 @@ camera.position.z = 50;
 // Create a board of cards (5x5 grid)
 const rows = 5;
 const cols = 5;
-const cardWidth = 5;
-const cardHeight = 5;
-const cardDepth = 1;
-const gap = 0.5;
+const cardWidth = 8;
+const cardHeight = 8;
+const cardDepth = 1.5;
+const gap = 1;
 
 //Card colors
 const colors = [0xFF0000, 0x0000FF, 0xFFFF00, 0x008000];
-
 
 // Generate combinations of color and number
 const colorNumberPairs = [];
@@ -51,7 +98,7 @@ for (let color of colors) {
 
 // Shuffle the color-number pairs array
 for (let i = colorNumberPairs.length - 1; i > 0; i--) {
-     const j = Math.floor(Math.random() * (i + 1));
+     const j = Math.floor(random() * (i + 1));
     [colorNumberPairs[i], colorNumberPairs[j]] = [colorNumberPairs[j], colorNumberPairs[i]];
  }
 
@@ -71,7 +118,7 @@ class Card {
         this.isFaceUp = true;
         this.rotationSpeed = 0.05; // Control the speed of rotation
         this.createCard();
-        this.startTimer();
+        
     }
 
     createCard() {
@@ -242,7 +289,7 @@ for (let i = 0; i < rows; i++) {
 
         // Calculate position for each card
         const positionX = j * (cardWidth + gap) - (cols * (cardWidth + gap)) / 2 + cardWidth / 2;
-        const positionY = i * (cardHeight + gap) - (rows * (cardHeight + gap)) / 2 + cardHeight / 2;
+        const positionY = i * (cardHeight + gap) - (rows * (cardHeight + gap)) / 2 + cardHeight / 2 - 10;
 
         // Create and add the card to the scene
         new Card(color, number, positionX, positionY);
@@ -282,7 +329,7 @@ window.addEventListener('click', (event) => {
     if (intersects.length > 0) {
         const intersectedCard = intersects[0].object;
         const card = cards.find(card => card.cardMesh === intersectedCard);
-        if (card && !card.isFaceUp && selectedCards.length < 2) {
+        if (card && !card.isFaceUp && selectedCards.length < 2 && !selectedCards.includes(card)) {
             card.flipUp();
             selectedCards.push(card);
         }
@@ -292,128 +339,30 @@ window.addEventListener('click', (event) => {
                 setTimeout(() => {
                     selectedCards[0].removeCard();
                     selectedCards[1].removeCard();
+                    selectedCards[0].cardMesh.visible = false;
+                    selectedCards[1].cardMesh.visible = false;
                     selectedCards = [];
+                    consecutiveMatches++;
+                    let pointsToAdd = Math.min(2 + (consecutiveMatches - 1), 5);
+                    points += pointsToAdd;
+                    pointsElement.textContent = `Points: ${points}`;
+                    
+                    // Check if all cards are matched
+                    if (cards.every(card => !card.cardMesh.visible)) {
+                        endGame();
+                    }
                 }, 1000);
             } else {
                 setTimeout(() => {
                     selectedCards[0].flipDown();
                     selectedCards[1].flipDown();
                     selectedCards = [];
+                    consecutiveMatches = 0;
                 }, 1000);
             }
         }
     }
 });
-
-// Create a kitten using Three.js basic geometry shapes
-function createKitten() {
-    const kittenGroup = new THREE.Group();
-
-    // Body - Cylinder to represent the torso
-    const bodyGeometry = new THREE.CylinderGeometry(2, 2.5, 6, 32);
-    const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.position.set(0, 0, 0);
-    body.rotation.z = Math.PI / 2;
-    kittenGroup.add(body);
-
-    // Head - Sphere to represent the head
-    const headGeometry = new THREE.SphereGeometry(2, 32, 32);
-    const headMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
-    const head = new THREE.Mesh(headGeometry, headMaterial);
-    head.position.set(4, 0, 0);
-    kittenGroup.add(head);
-
-    // Ears - Cones to represent ears
-    const earGeometry = new THREE.ConeGeometry(1, 2, 32);
-    const earMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
-    const leftEar = new THREE.Mesh(earGeometry, earMaterial);
-    const rightEar = new THREE.Mesh(earGeometry, earMaterial);
-    
-    leftEar.position.set(5.5, 1.5, 1);
-    leftEar.rotation.z = Math.PI / 8;
-    rightEar.position.set(5.5, 1.5, -1);
-    rightEar.rotation.z = -Math.PI / 8;
-    
-    kittenGroup.add(leftEar);
-    kittenGroup.add(rightEar);
-
-    // Legs - Cylinders to represent the legs
-    const legGeometry = new THREE.CylinderGeometry(0.5, 0.5, 3, 32);
-    const legMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
-    const frontLeftLeg = new THREE.Mesh(legGeometry, legMaterial);
-    const frontRightLeg = new THREE.Mesh(legGeometry, legMaterial);
-    const backLeftLeg = new THREE.Mesh(legGeometry, legMaterial);
-    const backRightLeg = new THREE.Mesh(legGeometry, legMaterial);
-
-    frontLeftLeg.position.set(1, -2, 1.5);
-    frontRightLeg.position.set(1, -2, -1.5);
-    backLeftLeg.position.set(-1, -2, 1.5);
-    backRightLeg.position.set(-1, -2, -1.5);
-
-    kittenGroup.add(frontLeftLeg);
-    kittenGroup.add(frontRightLeg);
-    kittenGroup.add(backLeftLeg);
-    kittenGroup.add(backRightLeg);
-
-    // Tail - Cylinder to represent the tail
-    const tailGeometry = new THREE.CylinderGeometry(0.3, 0.3, 4, 32);
-    const tailMaterial = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
-    const tail = new THREE.Mesh(tailGeometry, tailMaterial);
-    tail.position.set(-3.5, 0, 0);
-    tail.rotation.z = Math.PI / 4;
-    kittenGroup.add(tail);
-
-    // Eyes - Small spheres for the eyes
-    const eyeGeometry = new THREE.SphereGeometry(0.3, 16, 16);
-    const eyeMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
-    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-
-    leftEye.position.set(5, 0.8, 0.8);
-    rightEye.position.set(5, 0.8, -0.8);
-
-    kittenGroup.add(leftEye);
-    kittenGroup.add(rightEye);
-
-    // Nose - Small cone for the nose
-    const noseGeometry = new THREE.ConeGeometry(0.2, 0.5, 16);
-    const noseMaterial = new THREE.MeshPhongMaterial({ color: 0xff6347 });
-    const nose = new THREE.Mesh(noseGeometry, noseMaterial);
-    nose.position.set(5.9, 0.3, 0);
-    nose.rotation.x = Math.PI / 2;
-    kittenGroup.add(nose);
-
-    // Whiskers - Use thin cylinders to represent whiskers
-    const whiskerGeometry = new THREE.CylinderGeometry(0.02, 0.02, 3, 8);
-    const whiskerMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
-
-    for (let i = 0; i < 3; i++) {
-        const leftWhisker = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
-        leftWhisker.position.set(6, 0.1 * (i - 1), 1.2);
-        leftWhisker.rotation.z = Math.PI / 6;
-        kittenGroup.add(leftWhisker);
-
-        const rightWhisker = new THREE.Mesh(whiskerGeometry, whiskerMaterial);
-        rightWhisker.position.set(6, 0.1 * (i - 1), -1.2);
-        rightWhisker.rotation.z = -Math.PI / 6;
-        kittenGroup.add(rightWhisker);
-    }
-
-    // Add some simple texture using bump mapping (for more realistic fur effect)
-    const bumpTexture = new THREE.TextureLoader().load('textures/fur_bump_map.jpg', function() { console.log('Bump map loaded successfully'); }, undefined, function() { console.error('Error loading bump map'); });
-    bodyMaterial.bumpMap = bumpTexture;
-    bodyMaterial.bumpScale = 0.5;
-    headMaterial.bumpMap = bumpTexture;
-    headMaterial.bumpScale = 0.5;
-
-    return kittenGroup;
-}
-
-// Add the kitten to the scene
-const kitten = createKitten();
-kitten.position.set(0, -20, 0);
-scene.add(kitten);
 
 // Add ambient light
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light with intensity 0.5
@@ -428,9 +377,57 @@ scene.add(directionalLight);
 const lightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
 // scene.add(lightHelper); // Removed the light helper to clean up the visual appearance
 
+// Start button event listener
+startButton.addEventListener('click', () => {
+    // Add an image on top of the board once the game starts
+    document.body.appendChild(imageElement);
+    // Start the 10-second timer for each card
+    cards.forEach(card => card.startTimer());
+    document.body.removeChild(startButton);
+    document.body.appendChild(renderer.domElement);
+    pointsElement.textContent = `Points: ${points}`;
+    animate();
+});
+
 // Animation loop
+function endGame() {
+    // Stop the animation
+    cancelAnimationFrame(animationId);
+
+    // Display final score
+    const endMessage = document.createElement('div');
+    endMessage.innerText = `Game Over! Final Score: ${points}`;
+    endMessage.style.position = 'absolute';
+    endMessage.style.top = '50%';
+    endMessage.style.left = '50%';
+    endMessage.style.transform = 'translate(-50%, -50%)';
+    endMessage.style.padding = '20px';
+    endMessage.style.fontSize = '32px';
+    endMessage.style.color = '#000';
+    endMessage.style.backgroundColor = '#fff';
+    endMessage.style.borderRadius = '10px';
+    document.body.appendChild(endMessage);
+
+    // Create Replay button
+    const replayButton = document.createElement('button');
+    replayButton.innerText = 'Replay';
+    replayButton.style.position = 'absolute';
+    replayButton.style.top = '60%';
+    replayButton.style.left = '50%';
+    replayButton.style.transform = 'translate(-50%, -50%)';
+    replayButton.style.padding = '20px';
+    replayButton.style.fontSize = '24px';
+    replayButton.style.cursor = 'pointer';
+    document.body.appendChild(replayButton);
+
+    replayButton.addEventListener('click', () => {
+        location.reload();
+    });
+}
+
+let animationId;
 function animate() {
-    requestAnimationFrame(animate);
+    animationId = requestAnimationFrame(animate);
     renderer.render(scene, camera);
 
     // Countdown
@@ -477,9 +474,6 @@ function animate() {
         timerElement.textContent = `Timer: ${formattedMinutes}:${formattedSeconds}`;
     }
 }
-
-
-animate();
 
 // Adjust canvas size on window resize
 window.addEventListener('resize', () => {
