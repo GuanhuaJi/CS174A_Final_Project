@@ -1,6 +1,7 @@
 // Import the required Three.js components
 import * as THREE from 'three';
 import { Raycaster, Vector2 } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // Setting up the scene, camera, and renderer
 const scene = new THREE.Scene();
@@ -44,7 +45,6 @@ imageElement.style.transform = 'translateX(-50%)';
 imageElement.style.width = '200px';
 imageElement.style.height = 'auto';
 
-
 let points = 0;
 let initialCountdown = 10;
 let countdownStarted = false;
@@ -76,6 +76,13 @@ function random() {
 
 // Adjust the camera position
 camera.position.z = 50;
+
+// Add OrbitControls for camera rotation
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = false; // Enable damping (inertia)
+controls.enablePan = true; // Disable panning
+controls.minDistance = 30; // Set minimum zoom distance
+controls.maxDistance = 100; // Set maximum zoom distance
 
 // Create a board of cards (5x5 grid)
 const rows = 5;
@@ -429,6 +436,9 @@ let animationId;
 function animate() {
     animationId = requestAnimationFrame(animate);
     renderer.render(scene, camera);
+
+    // Update controls
+    controls.update();
 
     // Countdown
     if (!countdownStarted) {
