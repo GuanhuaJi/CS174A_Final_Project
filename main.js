@@ -234,7 +234,7 @@ class Card {
             const direction = new THREE.Vector3().subVectors(this.targetPosition, this.cardMesh.position);
             const distance = direction.length();
             direction.normalize();
-            const speed = 0.05;
+            const speed = 0.15;
 
             if (distance > speed) {
                 this.cardMesh.position.add(direction.multiplyScalar(speed));
@@ -283,6 +283,22 @@ class Card {
 
     removeCard() {
         scene.remove(this.cardMesh);
+    }
+
+    addFishModel() {
+        const objLoader = new OBJLoader();
+        objLoader.load('Fish.obj', (object) => {
+            const material = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Yellow/Brownish color
+            object.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = material;
+                }
+            });
+            object.scale.set(0.5, 0.5, 0.5);
+            object.position.set(this.cardMesh.position.x, this.cardMesh.position.y, this.cardMesh.position.z);
+            object.rotation.set(Math.PI / 2, 0, 0);
+            scene.add(object);
+        });
     }
 }
 
@@ -347,6 +363,8 @@ window.addEventListener('click', (event) => {
                 setTimeout(() => {
                     selectedCards[0].removeCard();
                     selectedCards[1].removeCard();
+                    selectedCards[0].addFishModel();
+                    selectedCards[1].addFishModel();
                     selectedCards[0].cardMesh.visible = false;
                     selectedCards[1].cardMesh.visible = false;
                     selectedCards = [];
