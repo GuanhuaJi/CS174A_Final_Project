@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { Raycaster, Vector2 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
 // Setting up the scene, camera, and renderer
 const scene = new THREE.Scene();
@@ -393,6 +394,16 @@ startButton.addEventListener('click', () => {
     document.body.removeChild(startButton);
     document.body.appendChild(renderer.domElement);
     pointsElement.textContent = `Points: ${points}`;
+    
+    // Load and add the bowl.obj to the top-right corner
+    const objLoader = new OBJLoader();
+    objLoader.load('Bowl.obj', (object) => {
+        object.scale.set(0.3, 0.3, 0.3);
+        object.position.set(20, 20, 0);
+        object.rotation.set(Math.PI / 2, 0, 0);
+        scene.add(object);
+    });
+
     animate();
 });
 
