@@ -298,8 +298,41 @@ class Card {
             object.position.set(this.cardMesh.position.x, this.cardMesh.position.y, this.cardMesh.position.z);
             object.rotation.set(Math.PI / 2, 0, 0);
             scene.add(object);
+    
+            setTimeout(() => {
+                const bowlPosition = new THREE.Vector3(20, 20, 2);
+                const startPosition = object.position.clone();
+                const maxZ = 15;
+                const totalTime = 2000;
+                const intervalTime = 16;
+                let elapsedTime = 0;
+    
+                const moveInterval = setInterval(() => {
+                    elapsedTime += intervalTime;
+    
+                    const progress = elapsedTime / totalTime;
+                    if (progress >= 1) {
+                        object.position.copy(bowlPosition);
+                        clearInterval(moveInterval);
+                        return;
+                    }
+    
+                    object.position.x = THREE.MathUtils.lerp(startPosition.x, bowlPosition.x, progress);
+                    object.position.y = THREE.MathUtils.lerp(startPosition.y, bowlPosition.y, progress);
+    
+                    const zHeight = 4 * maxZ * progress * (1 - progress);
+                    object.position.z = startPosition.z + zHeight;
+    
+                    object.rotation.x = progress * 1.5 * Math.PI;
+    
+                }, intervalTime);
+            }, 1000);
         });
     }
+    
+    
+    
+    
 }
 
 /// Create the grid of cards and skip the center position
@@ -416,11 +449,26 @@ startButton.addEventListener('click', () => {
     // Load and add the bowl.obj to the top-right corner
     const objLoader = new OBJLoader();
     objLoader.load('Bowl.obj', (object) => {
+        // 创建白色陶瓷材质
+        const baseMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.4,
+            metalness: 0.3
+        });
+    
+        object.traverse((child) => {
+            if (child.isMesh) {
+                child.material = baseMaterial;
+            }
+        });
+    
         object.scale.set(0.3, 0.3, 0.3);
         object.position.set(20, 20, 0);
         object.rotation.set(Math.PI / 2, 0, 0);
         scene.add(object);
     });
+    
+    
 
     animate();
 });
