@@ -43,6 +43,7 @@ let countdownStarted = false;
 let timerStart = null;
 let consecutiveMatches = 0;
 let kittenTail = null;
+let kittenPaw = null;
 
 // Create Start Game button
 const startButton = document.createElement('button');
@@ -118,6 +119,7 @@ class Card {
         this.isFaceUp = true;
         this.rotationSpeed = 0.05; // Control the speed of rotation
         this.createCard();
+        this.locked = false; // Indicates if the card is locked for one round
         
     }
 
@@ -322,6 +324,34 @@ class Card {
         });
     }
     
+
+    lockCardWithRedCross() {
+        // Lock the card and add a red cross texture
+        this.locked = true;
+        const canvas = document.createElement('canvas');
+        canvas.width = 128;
+        canvas.height = 128;
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#aaaaaa';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.strokeStyle = '#ff0000';
+        context.lineWidth = 10;
+        context.beginPath();
+        context.moveTo(0, 0);
+        context.lineTo(canvas.width, canvas.height);
+        context.moveTo(canvas.width, 0);
+        context.lineTo(0, canvas.height);
+        context.stroke();
+
+        const redCrossTexture = new THREE.CanvasTexture(canvas);
+        this.cardMesh.material[5] = new THREE.MeshBasicMaterial({ map: redCrossTexture });
+    }
+
+    unlockCard() {
+        this.locked = false;
+        this.cardMesh.material[5] = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
+    }
+
     
 }
 
@@ -382,6 +412,7 @@ window.addEventListener('click', (event) => {
         }
 
         if (selectedCards.length === 2) {
+            cards.forEach(card => card.unlockCard());
             if (selectedCards[0].number === selectedCards[1].number && selectedCards[0].color === selectedCards[1].color)  {
                 setTimeout(() => {
                     selectedCards[0].removeCard();
@@ -405,6 +436,24 @@ window.addEventListener('click', (event) => {
                         endGame();
                     }
                 }, 1000);
+            }  else if (selectedCards[0].color === selectedCards[1].color) {
+                // Matching Color, Different Number: Lock cards with a red cross for one round
+                // Move kitten's right paw to shake/draw a clockwise circle
+                selectedCards[0].lockCardWithRedCross();
+                selectedCards[1].lockCardWithRedCross();
+                setTimeout(() => {
+                    if (kittenPaw) {
+                        rotatePaw();
+                    }
+                    selectedCards[0].flipDown();
+                    selectedCards[1].flipDown();
+                    selectedCards = [];
+                    consecutiveMatches = 0;
+                     // Rotate the cat's paw back and forth
+                     
+                }, 1000);
+              
+              
             } else {
                 setTimeout(() => {
                     selectedCards[0].flipDown();
@@ -489,9 +538,11 @@ startButton.addEventListener('click', () => {
             }
         });
         scene.add(object);
+        kittenPaw = object;
     });
 
     // Load and add the kitten_rightpaw.fbx model
+    
     fbxLoader.load('kitten_rightpaw.fbx', (object) => {
         object.scale.set(3, 3, 3);
         object.position.set(0, 23, -10); // Position to the right of the kitten body
@@ -564,6 +615,47 @@ function rotateTail() {
     }, intervalTime);
 }
 
+
+
+
+function rotatePaw() {
+    const startRotation = kittenPaw.rotation.y;
+    const maxRotation = startRotation - THREE.MathUtils.degToRad(15);
+    const totalTime = 2000;
+    const halfCycleTime = totalTime / 2;
+    const intervalTime = 16;
+    let elapsedTime = 0;
+    let direction = -1;
+
+    const rotateInterval = setInterval(() => {
+        elapsedTime += intervalTime;
+
+        const progress = elapsedTime / halfCycleTime;
+
+        if (direction === -1) {
+            kittenPaw.rotation.y = THREE.MathUtils.lerp(
+                startRotation,
+                maxRotation,
+                progress
+            );
+        } else {
+            kittenPaw.rotation.y = THREE.MathUtils.lerp(
+                maxRotation,
+                startRotation,
+                progress
+            );
+        }
+
+        if (progress >= 1) {
+            elapsedTime = 0;
+            direction *= -1;
+
+            if (direction === -1) {
+                clearInterval(rotateInterval);
+            }
+        }
+    }, intervalTime);
+}
 
 
 
