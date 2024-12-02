@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Raycaster, Vector2 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 // Setting up the scene, camera, and renderer
 const scene = new THREE.Scene();
@@ -36,21 +37,12 @@ pointsElement.style.borderRadius = '5px';
 
 document.body.appendChild(pointsElement);
 
-// Add an image on top of the board
-const imageElement = document.createElement('img');
-imageElement.src = 'kawaii_cute_kitten_drawing_anime_by_jaidenanimat_d_by_itsamechristian_dg97pj6-fullview.jpg';
-imageElement.style.position = 'absolute';
-imageElement.style.top = '80px';
-imageElement.style.left = '50%';
-imageElement.style.transform = 'translateX(-50%)';
-imageElement.style.width = '200px';
-imageElement.style.height = 'auto';
-
 let points = 0;
 let initialCountdown = 10;
 let countdownStarted = false;
 let timerStart = null;
 let consecutiveMatches = 0;
+let kittenTail = null;
 
 // Create Start Game button
 const startButton = document.createElement('button');
@@ -300,7 +292,7 @@ class Card {
             scene.add(object);
     
             setTimeout(() => {
-                const bowlPosition = new THREE.Vector3(20, 20, 2);
+                const bowlPosition = new THREE.Vector3(27, -10, 2);
                 const startPosition = object.position.clone();
                 const maxZ = 15;
                 const totalTime = 2000;
@@ -329,8 +321,6 @@ class Card {
             }, 1000);
         });
     }
-    
-    
     
     
 }
@@ -406,6 +396,10 @@ window.addEventListener('click', (event) => {
                     points += pointsToAdd;
                     pointsElement.textContent = `Points: ${points}`;
                     
+                    // Rotate the cat's tail back and forth
+                    if (kittenTail) {
+                        rotateTail();
+                    }
                     // Check if all cards are matched
                     if (cards.every(card => !card.cardMesh.visible)) {
                         endGame();
@@ -438,8 +432,6 @@ const lightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
 
 // Start button event listener
 startButton.addEventListener('click', () => {
-    // Add an image on top of the board once the game starts
-    document.body.appendChild(imageElement);
     // Start the 10-second timer for each card
     cards.forEach(card => card.startTimer());
     document.body.removeChild(startButton);
@@ -462,16 +454,120 @@ startButton.addEventListener('click', () => {
             }
         });
     
-        object.scale.set(0.3, 0.3, 0.3);
-        object.position.set(20, 20, 0);
+        object.scale.set(0.4, 0.4, 0.4);
+        object.position.set(27, -10, 0);
         object.rotation.set(Math.PI / 2, 0, 0);
         scene.add(object);
     });
-    
-    
 
+    // Load and add the kitten.fbx model to the top of the board
+    const fbxLoader = new FBXLoader();
+    fbxLoader.load('kitten_body.fbx', (object) => {
+        object.scale.set(3, 3, 3);
+        object.position.set(0, 23, -10); // Position above the board
+        object.rotation.set(Math.PI / 2, 0, 0);
+
+        const material = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Golden-brownish color
+        object.traverse((child) => {
+            if (child.isMesh) {
+                child.material = material;
+            }
+        }); // Rotate to face the x-axis // Position above the board
+        scene.add(object);
+    });
+
+    // Load and add the kitten_leftpaw.fbx model
+    fbxLoader.load('kitten_leftpaw.fbx', (object) => {
+        object.scale.set(3, 3, 3);
+        object.position.set(0, 23, -10); // Position to the left of the kitten body
+        object.rotation.set(Math.PI / 2, 0, 0);
+
+        const material = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Golden-brownish color
+        object.traverse((child) => {
+            if (child.isMesh) {
+                child.material = material;
+            }
+        });
+        scene.add(object);
+    });
+
+    // Load and add the kitten_rightpaw.fbx model
+    fbxLoader.load('kitten_rightpaw.fbx', (object) => {
+        object.scale.set(3, 3, 3);
+        object.position.set(0, 23, -10); // Position to the right of the kitten body
+        object.rotation.set(Math.PI / 2, 0, 0);
+
+        const material = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Golden-brownish color
+        object.traverse((child) => {
+            if (child.isMesh) {
+                child.material = material;
+            }
+        });
+        scene.add(object);
+    });
+
+    // Load and add the kitten_tail.fbx model
+    fbxLoader.load('kitten_tail.fbx', (object) => {
+        object.scale.set(3, 3, 3);
+        object.position.set(0, 23, -10); // Position below the kitten body
+        object.rotation.set(Math.PI / 2, 0, 0);
+
+        const material = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Golden-brownish color
+        object.traverse((child) => {
+            if (child.isMesh) {
+                child.material = material;
+            }
+        });
+        scene.add(object);
+        kittenTail = object;
+    });
+    
     animate();
 });
+
+function rotateTail() {
+    const startRotation = kittenTail.rotation.x;
+    const maxRotation = startRotation - THREE.MathUtils.degToRad(30);
+    const totalTime = 2000;
+    const halfCycleTime = totalTime / 2;
+    const intervalTime = 16;
+    let elapsedTime = 0;
+    let direction = -1;
+
+    const rotateInterval = setInterval(() => {
+        elapsedTime += intervalTime;
+
+        const progress = elapsedTime / halfCycleTime;
+
+        if (direction === -1) {
+            kittenTail.rotation.x = THREE.MathUtils.lerp(
+                startRotation,
+                maxRotation,
+                progress
+            );
+        } else {
+            kittenTail.rotation.x = THREE.MathUtils.lerp(
+                maxRotation,
+                startRotation,
+                progress
+            );
+        }
+
+        if (progress >= 1) {
+            elapsedTime = 0;
+            direction *= -1;
+
+            if (direction === -1) {
+                clearInterval(rotateInterval);
+            }
+        }
+    }, intervalTime);
+}
+
+
+
+
+
 
 // Animation loop
 function endGame() {
