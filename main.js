@@ -460,7 +460,7 @@ window.addEventListener('click', (event) => {
     if (intersects.length > 0) {
         const intersectedCard = intersects[0].object;
         const card = cards.find(card => card.cardMesh === intersectedCard);
-        if (card && !card.isFaceUp && selectedCards.length < 2 && !selectedCards.includes(card)) {
+        if (card && !card.isFaceUp && !card.locked && selectedCards.length < 2 && !selectedCards.includes(card)) {
             card.flipUp();
             selectedCards.push(card);
         }
@@ -511,6 +511,9 @@ window.addEventListener('click', (event) => {
             } else if (selectedCards[0].number === selectedCards[1].number && selectedCards[0].color !== selectedCards[1].color) {
                 // Matching Number, Different Color: Swap positions as punishment
                 selectedCards[0].swapPositionWith(selectedCards[1], () => {
+                    if (kittenPaw) {
+                        rotatePaw(); // Rotate the kitten's paw during the swap
+                    }
                     selectedCards[0].flipDown();
                     selectedCards[1].flipDown();
                     selectedCards = [];
