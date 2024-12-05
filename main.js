@@ -44,6 +44,9 @@ let timerStart = null;
 let consecutiveMatches = 0;
 let kittenTail = null;
 let kittenPaw = null;
+let currentTurn = 0; // 当前游戏回合数
+let isFishingRodActive = false; // 是否有小鱼竿处于活动状态
+
 
 // Create Start Game button
 const startButton = document.createElement('button');
@@ -120,7 +123,7 @@ class Card {
         this.rotationSpeed = 0.05; // Control the speed of rotation
         this.createCard();
         this.locked = false; // Indicates if the card is locked for one round
-        
+        this.attachedObject = null; // Track any object (like the fish) attached to the card
     }
 
     createCard() {
@@ -199,25 +202,48 @@ class Card {
         const rotateInterval = setInterval(() => {
             if (this.cardMesh.rotation.y > 0) {
                 this.cardMesh.rotation.y -= this.rotationSpeed;
+    
+                // Rotate the attached object (e.g., fish) along with the card
+                if (this.attachedObject) {
+                    this.attachedObject.rotation.y -= this.rotationSpeed;
+    
+                    // Maintain a fixed distance from the card
+                    const offset = new THREE.Vector3(0, 0, -5); // Adjust the offset as needed
+                    this.attachedObject.position.copy(this.cardMesh.position).add(offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.cardMesh.rotation.y));
+                }
             } else {
                 this.cardMesh.rotation.y = 0;
+                if (this.attachedObject) this.attachedObject.rotation.y = 0; // Align the fish rotation
                 this.isFaceUp = true;
                 clearInterval(rotateInterval);
             }
         }, 16); // Approximately 60 frames per second
     }
+    
 
     flipDown() {
         const rotateInterval = setInterval(() => {
             if (this.cardMesh.rotation.y < Math.PI) {
                 this.cardMesh.rotation.y += this.rotationSpeed;
+    
+                // Rotate the attached object (e.g., fish) along with the card
+                if (this.attachedObject) {
+                    this.attachedObject.rotation.y += this.rotationSpeed;
+    
+                    // Maintain a fixed distance from the card
+                    const offset = new THREE.Vector3(0, 0, -5); // Adjust the offset as needed
+                    this.attachedObject.position.copy(this.cardMesh.position).add(offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.cardMesh.rotation.y));
+                }
             } else {
                 this.cardMesh.rotation.y = Math.PI;
+                if (this.attachedObject) this.attachedObject.rotation.y = Math.PI; // Align the fish rotation
                 this.isFaceUp = false;
                 clearInterval(rotateInterval);
             }
         }, 16); // Approximately 60 frames per second
     }
+    
+    
 
     setTargetPosition(x, y) {
         this.targetPosition = new THREE.Vector3(x, y, 0);
@@ -466,6 +492,8 @@ window.addEventListener('click', (event) => {
         }
 
         if (selectedCards.length === 2) {
+            console.log("HERE");
+            currentTurn++;
             cards.forEach(card => card.unlockCard());
             if (selectedCards[0].number === selectedCards[1].number && selectedCards[0].color === selectedCards[1].color)  {
                 setTimeout(() => {
@@ -524,10 +552,94 @@ window.addEventListener('click', (event) => {
                 setTimeout(() => {
                     selectedCards[0].flipDown();
                     selectedCards[1].flipDown();
+            
+                    // 防御性检查
+                    if (selectedCards.length < 2) {
+                        console.error("Selected cards are not complete.");
+                        return;
+                    }
+            
+                    const targetCard = selectedCards[1];
+                    if (!targetCard || !targetCard.cardMesh) {
+                        console.error("Target card or cardMesh is undefined.");
+                        return;
+                    }
+
+                    if (!isFishingRodActive) {
+                        isFishingRodActive = true; // 标记小鱼竿处于活动状态
+                    
+            
+                        // Load and add the fishing rod model to fly to the second card
+                        const objLoader = new OBJLoader();
+                        objLoader.load('Fish.obj', (object) => {
+                            const material = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Brownish color
+                            object.traverse((child) => {
+                                if (child.isMesh) {
+                                    child.material = material;
+                                }
+                            });
+                            object.scale.set(0.5, 0.5, 0.5); // Adjust size
+                            object.rotation.set(Math.PI / 2, 0, 0);
+                            object.position.set(27, -10, 5); // Start position above the bowl
+                
+                            scene.add(object);
+                
+                            // Fly the fishing rod towards the second card
+                            const startPosition = object.position.clone();
+                            const targetPosition = targetCard.cardMesh.position.clone();
+                            targetPosition.z += 5; // Position it slightly above the card
+                
+                            const totalTime = 2000; // Total fly time in ms
+                            const intervalTime = 16; // Frame interval (~60 FPS)
+                            let elapsedTime = 0;
+                
+                            const flyInterval = setInterval(() => {
+                                elapsedTime += intervalTime;
+                
+                                const progress = elapsedTime / totalTime;
+                                if (progress >= 1) {
+                                    object.position.copy(targetPosition); // Set to final position
+                                    targetCard.attachedObject = object;
+                                    clearInterval(flyInterval);
+                
+                                    // Begin tracking turn count for rod to stay on card
+                                    const startingTurn = currentTurn; // Record the current turn
+                                    const checkInterval = setInterval(() => {
+                                        if (currentTurn >= startingTurn + 3) {
+                                            console.log("DONE");
+                                            // Three rounds passed
+                                            scene.remove(object); // Remove the fishing rod
+                                            isFishingRodActive = false;
+                                            points--; // Deduct points
+                                            pointsElement.textContent = `Points: ${points}`;
+                                            clearInterval(checkInterval);
+                                        }
+                
+                                        // If the card is matched, remove the rod early
+                                        const isMatched = selectedCards.length === 2 &&
+                                        selectedCards[0].number === selectedCards[1].number &&
+                                        selectedCards[0].color === selectedCards[1].color;
+                                    
+                                        if (isMatched) {
+                                            scene.remove(object); // Remove the fishing rod
+                                            isFishingRodActive = false;
+                                            clearInterval(checkInterval); // Stop checking
+                                        }
+                                    }, 500); // Check frequently (but not strictly tied to time)
+                                }
+                
+                                // Update position using linear interpolation for a smooth straight path
+                                object.position.lerpVectors(startPosition, targetPosition, progress);
+                            }, intervalTime);
+                        });
+                }
+            
+                    // 清空选中卡片
                     selectedCards = [];
                     consecutiveMatches = 0;
                 }, 1000);
             }
+            
         }
     }
 });
