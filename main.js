@@ -352,6 +352,60 @@ class Card {
         this.cardMesh.material[5] = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
     }
 
+    swapPositionWith(targetCard, onComplete) {
+        const liftHeight1 = 10;
+        const liftHeight2 = 20;
+        const liftDuration = 500;
+        const moveDuration = 1000;
+        const intervalTime = 16;
+
+        // Step 1: Lift both cards
+        const initialPosition1 = this.cardMesh.position.clone();
+        const initialPosition2 = targetCard.cardMesh.position.clone();
+
+        let liftElapsedTime = 0;
+        const liftInterval = setInterval(() => {
+            liftElapsedTime += intervalTime;
+            const liftProgress = Math.min(liftElapsedTime / liftDuration, 1);
+
+            this.cardMesh.position.z = THREE.MathUtils.lerp(initialPosition1.z, initialPosition1.z + liftHeight1, liftProgress);
+            targetCard.cardMesh.position.z = THREE.MathUtils.lerp(initialPosition2.z, initialPosition2.z + liftHeight2, liftProgress);
+
+            if (liftProgress === 1) {
+                clearInterval(liftInterval);
+                // Step 2: Move both cards to swap positions
+                let moveElapsedTime = 0;
+                const moveInterval = setInterval(() => {
+                    moveElapsedTime += intervalTime;
+                    const moveProgress = Math.min(moveElapsedTime / moveDuration, 1);
+
+                    this.cardMesh.position.x = THREE.MathUtils.lerp(initialPosition1.x, initialPosition2.x, moveProgress);
+                    this.cardMesh.position.y = THREE.MathUtils.lerp(initialPosition1.y, initialPosition2.y, moveProgress);
+                    targetCard.cardMesh.position.x = THREE.MathUtils.lerp(initialPosition2.x, initialPosition1.x, moveProgress);
+                    targetCard.cardMesh.position.y = THREE.MathUtils.lerp(initialPosition2.y, initialPosition1.y, moveProgress);
+
+                    if (moveProgress === 1) {
+                        clearInterval(moveInterval);
+                        // Step 3: Lower both cards back down
+                        let lowerElapsedTime = 0;
+                        const lowerInterval = setInterval(() => {
+                            lowerElapsedTime += intervalTime;
+                            const lowerProgress = Math.min(lowerElapsedTime / liftDuration, 1);
+
+                            this.cardMesh.position.z = THREE.MathUtils.lerp(initialPosition1.z + liftHeight1, initialPosition1.z, lowerProgress);
+                            targetCard.cardMesh.position.z = THREE.MathUtils.lerp(initialPosition2.z + liftHeight2, initialPosition2.z, lowerProgress);
+
+                            if (lowerProgress === 1) {
+                                clearInterval(lowerInterval);
+                                if (onComplete) onComplete();
+                            }
+                        }, intervalTime);
+                    }
+                }, intervalTime);
+            }
+        }, intervalTime);
+    }
+
     
 }
 
@@ -454,7 +508,16 @@ window.addEventListener('click', (event) => {
                 }, 1000);
               
               
-            } else {
+            } else if (selectedCards[0].number === selectedCards[1].number && selectedCards[0].color !== selectedCards[1].color) {
+                // Matching Number, Different Color: Swap positions as punishment
+                selectedCards[0].swapPositionWith(selectedCards[1], () => {
+                    selectedCards[0].flipDown();
+                    selectedCards[1].flipDown();
+                    selectedCards = [];
+                    consecutiveMatches = 0;
+                });
+            }
+            else {
                 setTimeout(() => {
                     selectedCards[0].flipDown();
                     selectedCards[1].flipDown();
@@ -568,8 +631,8 @@ startButton.addEventListener('click', () => {
     });
 
     fbxLoader.load('kitten_eyes.fbx', (object) => {
-        object.scale.set(3, 3, 3);
-        object.position.set(0, 26, -12); // Position above the board
+        object.scale.set(2.5, 2.5, 2.5);
+        object.position.set(0, 23, -7); // Position above the board
         object.rotation.set(Math.PI / 2, 0, 0);
 
         const material = new THREE.MeshStandardMaterial({ color: 0x000000 });
