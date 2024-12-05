@@ -516,7 +516,7 @@ startButton.addEventListener('click', () => {
         object.position.set(0, 23, -10); // Position above the board
         object.rotation.set(Math.PI / 2, 0, 0);
 
-        const material = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Golden-brownish color
+        const material = new THREE.MeshStandardMaterial({ color: 0xfcebb1 });
         object.traverse((child) => {
             if (child.isMesh) {
                 child.material = material;
@@ -525,13 +525,68 @@ startButton.addEventListener('click', () => {
         scene.add(object);
     });
 
+    fbxLoader.load('kitten_backlegs.fbx', (object) => {
+        object.scale.set(3, 3, 3);
+        object.position.set(0, 23, -10); // Position above the board
+        object.rotation.set(Math.PI / 2, 0, 0);
+
+        const material = new THREE.MeshStandardMaterial({ color: 0xfce186 }); // Golden-brownish color
+        object.traverse((child) => {
+            if (child.isMesh) {
+                child.material = material;
+            }
+        }); // Rotate to face the x-axis // Position above the board
+        scene.add(object);
+    });
+
+    fbxLoader.load('kitten_head.fbx', (object) => {
+        object.scale.set(3, 3, 3);
+        object.position.set(0, 23, -2); // Position above the board
+        object.rotation.set(Math.PI / 2, 0, 0);
+
+        const material = new THREE.MeshStandardMaterial({ color: 0xfcebb1 }); // Golden-brownish color
+        object.traverse((child) => {
+            if (child.isMesh) {
+                child.material = material;
+            }
+        }); // Rotate to face the x-axis // Position above the board
+        scene.add(object);
+    });
+
+    fbxLoader.load('kitten_ears.fbx', (object) => {
+        object.scale.set(3, 3, 3);
+        object.position.set(0, 23, -2); // Position above the board
+        object.rotation.set(Math.PI / 2, 0, 0);
+
+        const material = new THREE.MeshStandardMaterial({ color: 0xfce186 });
+        object.traverse((child) => {
+            if (child.isMesh) {
+                child.material = material;
+            }
+        }); // Rotate to face the x-axis // Position above the board
+        scene.add(object);
+    });
+
+    fbxLoader.load('kitten_eyes.fbx', (object) => {
+        object.scale.set(3, 3, 3);
+        object.position.set(0, 26, -12); // Position above the board
+        object.rotation.set(Math.PI / 2, 0, 0);
+
+        const material = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        object.traverse((child) => {
+            if (child.isMesh) {
+                child.material = material;
+            }
+        }); // Rotate to face the x-axis // Position above the board
+        scene.add(object);
+    });
     // Load and add the kitten_leftpaw.fbx model
     fbxLoader.load('kitten_leftpaw.fbx', (object) => {
         object.scale.set(3, 3, 3);
         object.position.set(0, 23, -10); // Position to the left of the kitten body
         object.rotation.set(Math.PI / 2, 0, 0);
 
-        const material = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Golden-brownish color
+        const material = new THREE.MeshStandardMaterial({ color: 0xfce186 }); // Golden-brownish color
         object.traverse((child) => {
             if (child.isMesh) {
                 child.material = material;
@@ -548,7 +603,7 @@ startButton.addEventListener('click', () => {
         object.position.set(0, 23, -10); // Position to the right of the kitten body
         object.rotation.set(Math.PI / 2, 0, 0);
 
-        const material = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Golden-brownish color
+        const material = new THREE.MeshStandardMaterial({ color: 0xfce186 }); // Golden-brownish color
         object.traverse((child) => {
             if (child.isMesh) {
                 child.material = material;
@@ -563,7 +618,7 @@ startButton.addEventListener('click', () => {
         object.position.set(0, 23, -10); // Position below the kitten body
         object.rotation.set(Math.PI / 2, 0, 0);
 
-        const material = new THREE.MeshStandardMaterial({ color: 0xD2B48C }); // Golden-brownish color
+        const material = new THREE.MeshStandardMaterial({ color: 0xfce186 }); // Golden-brownish color
         object.traverse((child) => {
             if (child.isMesh) {
                 child.material = material;
