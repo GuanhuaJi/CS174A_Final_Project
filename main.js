@@ -7,33 +7,47 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 // Setting up the scene, camera, and renderer
 const scene = new THREE.Scene();
+const loader = new THREE.TextureLoader();
+loader.load('scene_background.jpg', function(texture) {
+    scene.background = texture;
+});
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
+//scene.background = new THREE.Color(0x87CEEB); // Sky blue color
+
+
 
 // Initialize Timer element
 const timerElement = document.createElement('div');
 timerElement.style.position = 'absolute';
-timerElement.style.top = '20px';
-timerElement.style.left = '20px';
-timerElement.style.fontSize = '24px';
+timerElement.style.top = '10px';
+timerElement.style.left = '10px';
+timerElement.style.fontSize = '30px';
 timerElement.style.color = '#000';
 timerElement.style.backgroundColor = '#fff';
 timerElement.style.padding = '10px';
 timerElement.style.borderRadius = '5px';
+timerElement.style.border = '10px solid #f0a0a0'; 
+timerElement.style.fontFamily = "'Brush Script MT', cursive, sans-serif"; // Cursive-like font
+
+
 
 document.body.appendChild(timerElement);
 
 // Initialize Points element
 const pointsElement = document.createElement('div');
 pointsElement.style.position = 'absolute';
-pointsElement.style.top = '20px';
-pointsElement.style.right = '20px';
-pointsElement.style.fontSize = '24px';
+pointsElement.style.top = '10px';
+pointsElement.style.right = '10px';
+pointsElement.style.fontSize = '30px';
 pointsElement.style.color = '#000';
 pointsElement.style.backgroundColor = '#fff';
 pointsElement.style.padding = '10px';
 pointsElement.style.borderRadius = '5px';
+pointsElement.style.border = '10px solid #f0a0a0';
+pointsElement.style.fontFamily = "'Brush Script MT', cursive, sans-serif"; // Cursive-like font
+
 
 document.body.appendChild(pointsElement);
 
