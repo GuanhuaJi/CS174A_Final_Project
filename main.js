@@ -90,10 +90,21 @@ camera.position.z = 50;
 
 // Add OrbitControls for camera rotation
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = false; // Enable damping (inertia)
-controls.enablePan = true; // Disable panning
+
+const thirtyDegreesInRadians = THREE.MathUtils.degToRad(30);
+controls.minPolarAngle = Math.PI / 2 - thirtyDegreesInRadians;
+controls.maxPolarAngle = Math.PI / 2 + thirtyDegreesInRadians;
+
+controls.minAzimuthAngle = -thirtyDegreesInRadians;
+controls.maxAzimuthAngle = thirtyDegreesInRadians;
+
+controls.enableZoom = true;
+
 controls.minDistance = 30; // Set minimum zoom distance
 controls.maxDistance = 100; // Set maximum zoom distance
+
+controls.update();
+
 
 // Create a board of cards (5x5 grid)
 const rows = 5;
@@ -104,7 +115,7 @@ const cardDepth = 1.5;
 const gap = 1;
 
 //Card colors
-const colors = [0xFF0000, 0x0000FF, 0xFFFF00, 0x008000];
+const colors = [0xFF0000, 0x0000FF, 0xFFA500, 0x008000];
 
 // Generate combinations of color and number
 const colorNumberPairs = [];
@@ -152,7 +163,7 @@ class Card {
         context.fillStyle = '#ffffff';
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = '#000000';
-        context.font = '40px Arial';
+        context.font = '60px "Comic Sans MS", cursive';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         context.fillText(this.number, canvas.width / 2, canvas.height / 2);
@@ -566,6 +577,9 @@ window.addEventListener('click', (event) => {
                 setTimeout(() => {
                     selectedCards[0].flipDown();
                     selectedCards[1].flipDown();
+                    if (kittenPaw) {
+                        rotatePaw(); // 猫咪挥手
+                    }
             
                     // 防御性检查
                     if (selectedCards.length < 2) {
@@ -956,46 +970,54 @@ function animate() {
     if (!countdownStarted) {
         countdownStarted = true;
 
-        const formattedMinutes = String(Math.floor(initialCountdown / 60)).padStart(2, '0');
-        const formattedSeconds = String(initialCountdown % 60).padStart(2, '0');
-        timerElement.textContent = `Timer: ${formattedMinutes}:${formattedSeconds}`;
+        // 初始化开始前的 10 秒倒计时
+        let preGameCountdown = 10;
 
-        const countdownInterval = setInterval(() => {
-            initialCountdown--;
+        const preGameInterval = setInterval(() => {
+            const formattedSeconds = String(preGameCountdown).padStart(2, '0');
+            timerElement.textContent = `Starting in: 00:${formattedSeconds}`;
+            preGameCountdown--;
 
-            const minutes = Math.floor(initialCountdown / 60);
-            const seconds = initialCountdown % 60;
-            const formattedMinutes = String(minutes).padStart(2, '0');
-            const formattedSeconds = String(seconds).padStart(2, '0');
-            timerElement.textContent = `Timer: ${formattedMinutes}:${formattedSeconds}`;
+            if (preGameCountdown < 0) {
+                clearInterval(preGameInterval);
 
-            if (initialCountdown <= 0) {
-                clearInterval(countdownInterval);
-
-                // Flip all cards face down after countdown ends
+                // 所有牌翻过去后，开始正式计时 3 分钟
                 cards.forEach(card => card.startRotation());
 
-                // After flipping, initiate the shuffle animation
+                // 等牌翻过去后启动 3 分钟倒计时
                 setTimeout(() => {
                     Card.initiateShuffle();
-                }, 1000); // Wait for 1 second after flipping down before shuffling
+                    startGameTimer(); // 启动 3 分钟倒计时
+                }, 1000);
             }
         }, 1000);
     }
 
     // Move each card towards its target position during shuffle animation
     cards.forEach(card => card.moveTowardsTarget());
+}
 
-    // Update game timer display once all cards have faced down and are shuffled
-    if (allCardsFacedDown && timerStart) {
-        const elapsedTime = Math.floor((Date.now() - timerStart) / 1000);
-        const minutes = Math.floor(elapsedTime / 60);
-        const seconds = elapsedTime % 60;
+// 启动正式游戏的 3 分钟倒计时
+function startGameTimer() {
+    let gameCountdown = 180; // 3 分钟倒计时
+
+    const gameInterval = setInterval(() => {
+        const minutes = Math.floor(gameCountdown / 60);
+        const seconds = gameCountdown % 60;
         const formattedMinutes = String(minutes).padStart(2, '0');
         const formattedSeconds = String(seconds).padStart(2, '0');
         timerElement.textContent = `Timer: ${formattedMinutes}:${formattedSeconds}`;
-    }
+        gameCountdown--;
+
+        if (gameCountdown < 0) {
+            clearInterval(gameInterval);
+            endGame(); // 游戏时间到，触发 Game Over
+        }
+    }, 1000);
 }
+
+
+
 
 // Adjust canvas size on window resize
 window.addEventListener('resize', () => {
